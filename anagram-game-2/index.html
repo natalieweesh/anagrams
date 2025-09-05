@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anagram Game - 6 & 7 Letter Words</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <h1>Anagram Game</h1>
+            <p class="game-subtitle">Unscramble 6 & 7 letter words!</p>
+            <div class="game-stats">
+                <div class="score-display">
+                    Score: <span id="score">0</span>
+                </div>
+                <div class="timer-display">
+                    Time: <span id="timer">60</span>s
+                </div>
+            </div>
+        </header>
+
+        <main class="game-main">
+            <div class="word-display">
+                <div class="scrambled-word" id="scrambledWord">LOADING...</div>
+                <div class="clue">
+                    Clue: <span id="clue">Getting ready...</span>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <input 
+                    type="text" 
+                    id="guessInput" 
+                    placeholder="Type your guess here..." 
+                    maxlength="7"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+                <button id="submitBtn" type="button">Submit</button>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+        </main>
+
+        <div class="game-over-screen" id="gameOverScreen" style="display: none;">
+            <div class="game-over-content">
+                <h2>Time's Up!</h2>
+                <div class="final-score">
+                    Final Score: <span id="finalScore">0</span>
+                </div>
+                <div class="score-message" id="scoreMessage"></div>
+                <button id="playAgainBtn" type="button">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="words.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Anagram Game Show</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .on-air-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff0066;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 20px #ff0066;
+        }
+
+        .play-again-btn {
+            position: absolute;
+            top: 20px;
+            right: 120px;
+            padding: 12px 20px;
+            min-height: 44px;
+            font-size: 0.9rem;
+            background: linear-gradient(45deg, #ff0066, #ff6b6b);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px #ff0066;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .play-again-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px #ff0066;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 3rem;
+            margin: 40px 0;
+            text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 2.5rem;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .timer.warning {
+            color: #ff6b6b;
+            animation: flash 0.5s infinite;
+        }
+
+        .letters-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(145deg, #2c1810, #1a0f08);
+            border-radius: 20px;
+            border: 3px solid #8B4513;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .letters-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #D2691E, #CD853F, #D2691E);
+            border-radius: 22px;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .letters-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center top, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: 20px;
+            pointer-events: none;
+        }
+
+        .clue-display {
+            font-size: 1.5rem;
+            color: #ffaa00;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px 20px;
+            background: rgba(255, 170, 0, 0.1);
+            border-radius: 15px;
+            border: 2px solid #ffaa00;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ffaa00;
+        }
+
+        .clue-display::before {
+            content: "💡 Clue: ";
+            color: #fff;
+        }
+
+        .scrambled-letters {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .letter-tile {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            min-width: 44px;
+            min-height: 44px;
+            background: linear-gradient(145deg, #F5DEB3, #DEB887);
+            border: 2px solid #8B4513;
+            border-radius: 8px;
+            font-family: 'Arial', sans-serif;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2F1B14;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+            position: relative;
+            transform: rotate(-2deg);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .letter-tile:nth-child(even) {
+            transform: rotate(1deg);
+        }
+
+        .letter-tile:nth-child(3n) {
+            transform: rotate(-1deg);
+        }
+
+        .letter-tile:hover {
+            transform: rotate(0deg) scale(1.05);
+            box-shadow: 
+                0 6px 12px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .letter-tile::after {
+            content: attr(data-points);
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #8B4513;
+            text-shadow: none;
+        }
+
+        .letter-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .shuffle-btn {
+            padding: 12px 24px;
+            min-height: 44px;
+            font-size: 1rem;
+            background: linear-gradient(45deg, #00ff88, #00ffff);
+            border: none;
+            border-radius: 20px;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .shuffle-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #00ff88;
+        }
+
+
+
+        .input-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .word-input {
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            border: 2px solid #00ffff;
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            width: 300px;
+            text-align: center;
+            outline: none;
+            min-height: 44px;
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            appearance: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .word-input:focus {
+            box-shadow: 0 0 20px #00ffff;
+        }
+
+        .submit-btn {
+            padding: 15px 30px;
+            min-height: 44px;
+            font-size: 1.2rem;
+            background: linear-gradient(45deg, #ff0066, #ff6b6b);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #ff0066;
+        }
+
+        .score {
+            text-align: center;
+            font-size: 2rem;
+            margin: 20px 0;
+            color: #00ff88;
+            text-shadow: 0 0 15px #00ff88;
+        }
+
+        .found-words {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 30px 0;
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 20px #00ff88;
+        }
+
+        .found-words h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00ff88;
+        }
+
+        .word-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .word-item {
+            background: rgba(0, 255, 136, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+        }
+
+        .check-score-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .check-score-btn {
+            padding: 15px 30px;
+            min-height: 44px;
+            font-size: 1.2rem;
+            background: linear-gradient(45deg, #ffaa00, #ffcc00);
+            border: none;
+            border-radius: 25px;
+            color: #000;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px #ffaa00;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .check-score-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #ffaa00;
+        }
+
+        .reaction {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            animation: bounce 1s ease-out;
+            z-index: 1000;
+        }
+
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .game-over h2 {
+            font-size: 4rem;
+            color: #ff0066;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px #ff0066;
+        }
+
+        .final-score {
+            font-size: 2.5rem;
+            color: #00ff88;
+            margin-bottom: 30px;
+        }
+
+        .word-summary {
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .found-words-summary h3,
+        .not-found-words-summary h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .not-found-words-summary h3 {
+            color: #ff6b6b;
+        }
+
+        .word-details {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .word-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .word-detail:last-child {
+            border-bottom: none;
+        }
+
+        .word-detail.found .word {
+            color: #00ff88;
+        }
+
+        .word-detail.missed .word {
+            color: #ff6b6b;
+        }
+
+        .word-detail .points {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+
+        .word-detail .clue-hint {
+            color: #00ffff;
+            font-size: 0.9rem;
+            font-style: italic;
+            margin: 0 10px;
+        }
+
+        .restart-btn {
+            padding: 20px 40px;
+            min-height: 44px;
+            font-size: 1.5rem;
+            background: linear-gradient(45deg, #00ffff, #00ff88);
+            border: none;
+            border-radius: 30px;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px #00ffff;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff; }
+            50% { text-shadow: 0 0 30px #00ffff, 0 0 60px #00ffff, 0 0 80px #00ffff; }
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes bounce {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .lights {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .light {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .light:nth-child(1) {
+            background: #ff0066;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .light:nth-child(2) {
+            background: #00ffff;
+            top: 20%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+
+        .light:nth-child(3) {
+            background: #00ff88;
+            bottom: 30%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 15px;
+                max-width: 100%;
+            }
+
+            .title {
+                font-size: 2rem;
+                margin: 20px 0;
+            }
+
+            .timer {
+                font-size: 2rem;
+                margin: 15px 0;
+            }
+
+            .on-air-badge {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 0 auto 20px auto;
+                display: block;
+                width: fit-content;
+            }
+
+            .play-again-btn {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 0 auto 10px auto;
+                display: block;
+                width: fit-content;
+            }
+
+            .letters-container {
+                padding: 20px 15px;
+                margin: 20px 0;
+            }
+
+            .letter-tile {
+                width: 50px;
+                height: 50px;
+                min-width: 48px;
+                min-height: 48px;
+                font-size: 2rem;
+                margin: 2px;
+            }
+
+            .scrambled-letters {
+                gap: 6px;
+                margin: 15px 0;
+            }
+
+            .word-input {
+                width: 90%;
+                max-width: 280px;
+                font-size: 1.1rem;
+                padding: 12px 18px;
+            }
+
+            .submit-btn {
+                padding: 12px 25px;
+                font-size: 1.1rem;
+                margin: 10px 0 0 0;
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .input-section {
+                margin: 20px 0;
+            }
+
+            .score {
+                font-size: 1.5rem;
+                margin: 15px 0;
+            }
+
+            .found-words {
+                padding: 15px;
+                margin: 20px 0;
+            }
+
+            .word-summary {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                max-width: 100%;
+            }
+
+            .game-over h2 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+            }
+
+            .final-score {
+                font-size: 1.8rem;
+                margin-bottom: 20px;
+            }
+
+            .restart-btn {
+                padding: 15px 30px;
+                font-size: 1.2rem;
+            }
+
+            .shuffle-btn, .check-score-btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+
+            .letter-controls {
+                margin-top: 10px;
+            }
+
+            /* Improve text readability */
+            .found-words h3, .word-summary h3 {
+                font-size: 1.3rem;
+            }
+
+            .word-item {
+                font-size: 1rem;
+                padding: 10px 16px;
+            }
+
+            /* Better spacing for mobile */
+            .word-list {
+                gap: 8px;
+            }
+
+            /* Optimize loading message */
+            #loadingMessage {
+                font-size: 1rem !important;
+                margin-top: 15px !important;
+            }
+
+            /* Mobile clue display */
+            .clue-display {
+                font-size: 1.2rem;
+                margin: 10px 0;
+                padding: 8px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 10px;
+            }
+
+            .title {
+                font-size: 1.8rem;
+                margin: 15px 0;
+            }
+
+            .timer {
+                font-size: 1.8rem;
+                margin: 10px 0;
+            }
+
+            .letter-tile {
+                width: 46px;
+                height: 46px;
+                min-width: 44px;
+                min-height: 44px;
+                font-size: 1.8rem;
+            }
+
+            .scrambled-letters {
+                gap: 4px;
+                margin: 10px 0;
+            }
+
+            .word-input {
+                width: 95%;
+                font-size: 1rem;
+                padding: 10px 15px;
+            }
+
+            .submit-btn {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+
+            .score {
+                font-size: 1.3rem;
+            }
+
+            .found-words {
+                padding: 10px;
+                margin: 15px 0;
+            }
+
+            .game-over h2 {
+                font-size: 2rem;
+            }
+
+            .final-score {
+                font-size: 1.5rem;
+            }
+
+            .letters-container {
+                padding: 15px 10px;
+            }
+
+            /* Smaller text improvements for very small screens */
+            .found-words h3, .word-summary h3 {
+                font-size: 1.1rem;
+            }
+
+            .word-item {
+                font-size: 0.9rem;
+                padding: 8px 14px;
+            }
+
+            #loadingMessage {
+                font-size: 0.9rem !important;
+            }
+
+            /* Smaller clue display for very small screens */
+            .clue-display {
+                font-size: 1rem;
+                margin: 8px 0;
+                padding: 6px 12px;
+            }
+        }
+
+        /* Landscape orientation adjustments for mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .title {
+                font-size: 1.5rem;
+                margin: 10px 0;
+            }
+
+            .timer {
+                font-size: 1.5rem;
+                margin: 8px 0;
+            }
+
+            .letters-container {
+                padding: 15px;
+                margin: 15px 0;
+            }
+
+            .input-section {
+                margin: 15px 0;
+            }
+
+            .found-words {
+                margin: 15px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="lights">
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+    </div>
+
+            <div class="game-container">
+            <div class="on-air-badge">ON AIR</div>
+            <button class="play-again-btn" onclick="newGame()">Play Again</button>
+            
+            <h1 class="title">ANAGRAM GAME SHOW</h1>
+            
+            <div class="timer" id="timer">60</div>
+            
+            <div class="score">Score: <span id="score">0</span></div>
+            
+            <div class="letters-container">
+                <h3>Scrambled Word</h3>
+                <div class="clue-display" id="clueDisplay">Loading clue...</div>
+                <div class="scrambled-letters" id="scrambledLetters"></div>
+                <div class="letter-controls">
+                    <button class="shuffle-btn" onclick="shuffleLetters()">Shuffle</button>
+                    <button class="shuffle-btn" onclick="newGame()">New Word</button>
+                </div>
+            </div>
+        
+        <div class="input-section">
+            <input type="text" class="word-input" id="wordInput" placeholder="Loading words..." maxlength="15" disabled autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+            <button class="submit-btn" id="submitBtn" onclick="submitWord()" disabled>Submit</button>
+            <div id="loadingMessage" style="color: #00ffff; margin-top: 10px; font-size: 0.9rem;">Loading words...</div>
+        </div>
+        
+        <div class="found-words">
+            <h3>Found Words</h3>
+            <div class="word-list" id="wordList"></div>
+        </div>
+        
+        <div class="check-score-section">
+            <button class="check-score-btn" onclick="checkScore()">Check Score</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            letters: '',
+            score: 0,
+            foundWords: [],
+            missedWords: [],
+            timeLeft: 60,
+            gameActive: true
+        };
+
+        // Load words from words.js file
+        let wordsArray = [];
+        let currentWordData = null;
+        let wordDisplayStartTime = null;
+        let wordsLoaded = false;
+
+        // Load words.js file
+        const script = document.createElement('script');
+        script.src = 'anagram-game-2/words.js';
+        script.onload = function() {
+            if (window.words && window.words.length > 0) {
+                wordsArray = window.words;
+                wordsLoaded = true;
+                console.log("Words loaded:", wordsArray.length, "word/clue pairs");
+                
+                // Enable input and button once words are loaded
+                document.getElementById("wordInput").disabled = false;
+                document.getElementById("wordInput").placeholder = "Type the word...";
+                document.getElementById("submitBtn").disabled = false;
+                document.getElementById("loadingMessage").textContent = "Words loaded! Ready to play.";
+                document.getElementById("loadingMessage").style.color = "#00ff88";
+                
+                // Start the first word
+                selectNewWord();
+                
+                // Auto-focus the input box
+                document.getElementById("wordInput").focus();
+            }
+        };
+        script.onerror = function() {
+            console.error("Failed to load words.js");
+            document.getElementById("loadingMessage").textContent = "Failed to load words. Please check words.js file.";
+            document.getElementById("loadingMessage").style.color = "#ff0066";
+        };
+        document.head.appendChild(script);
+
+        // Initialize game
+        function initGame() {
+            if (wordsLoaded) {
+                selectNewWord();
+            }
+            updateDisplay();
+            startTimer();
+            document.getElementById('wordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitWord();
+                }
+            });
+            
+            // Add spacebar shortcut for shuffling
+            document.addEventListener('keydown', function(e) {
+                if (e.code === 'Space' && !e.target.matches('input, textarea')) {
+                    e.preventDefault(); // Prevent page scrolling
+                    shuffleLetters();
+                }
+            });
+            
+            // Auto-focus the input box when game starts
+            document.getElementById('wordInput').focus();
+        }
+
+        // Select a new word and scramble it
+        function selectNewWord() {
+            if (!wordsLoaded || wordsArray.length === 0) return;
+            
+            // Only add to missed words if the previous word was displayed for at least 1 millisecond
+            // This catches virtually any word that gets displayed, even briefly
+            if (currentWordData && 
+                !gameState.foundWords.includes(currentWordData.word) && 
+                wordDisplayStartTime && 
+                (Date.now() - wordDisplayStartTime) >= 1) {
+                gameState.missedWords.push(currentWordData);
+            }
+            
+            // Select a random word from the array
+            const randomIndex = Math.floor(Math.random() * wordsArray.length);
+            currentWordData = wordsArray[randomIndex];
+            
+            // Record when this word starts being displayed
+            wordDisplayStartTime = Date.now();
+            
+            // Scramble the letters of the word
+            gameState.letters = currentWordData.word.split('').sort(() => Math.random() - 0.5).join('');
+            
+            // Make sure the scrambled version is different from the original
+            let attempts = 0;
+            while (gameState.letters === currentWordData.word && attempts < 10) {
+                gameState.letters = currentWordData.word.split('').sort(() => Math.random() - 0.5).join('');
+                attempts++;
+            }
+        }
+
+        // Shuffle the current letters
+        function shuffleLetters() {
+            if (gameState.letters) {
+                gameState.letters = gameState.letters.split('').sort(() => Math.random() - 0.5).join('');
+                updateDisplay();
+                
+                // Show a brief shuffle effect
+                const lettersEl = document.getElementById('scrambledLetters');
+                lettersEl.style.transform = 'scale(1.1)';
+                lettersEl.style.transition = 'transform 0.2s ease';
+                
+                setTimeout(() => {
+                    lettersEl.style.transform = 'scale(1)';
+                }, 200);
+            }
+        }
+
+        // Get a new word
+        function newGame() {
+            selectNewWord();
+            updateDisplay();
+            
+            // Show a brief new game effect
+            const lettersEl = document.getElementById('scrambledLetters');
+            lettersEl.style.transform = 'scale(0.8)';
+            lettersEl.style.transition = 'transform 0.3s ease';
+            
+            setTimeout(() => {
+                lettersEl.style.transform = 'scale(1)';
+            }, 300);
+        }
+
+        // Voice features removed for faster gameplay
+
+        // Submit word
+        function submitWord() {
+            const input = document.getElementById('wordInput');
+            const word = input.value.toLowerCase().trim();
+            
+            if (!word || !gameState.gameActive || !currentWordData) return;
+            
+            // Check if the word matches the target word
+            if (word === currentWordData.word.toLowerCase()) {
+                // Correct answer!
+                gameState.foundWords.push(currentWordData.word);
+                const points = calculatePoints(currentWordData.word);
+                gameState.score += points;
+                
+                // Removed voice reactions for faster gameplay
+                
+                showReaction();
+                
+                // Get a new word after a short delay
+                setTimeout(() => {
+                    selectNewWord();
+                    updateDisplay();
+                }, 500);
+                
+            } else {
+                // Wrong answer
+                showMessage('Wrong! Try again.', 'error');
+            }
+            
+            // Always clear input after submission
+            input.value = '';
+        }
+
+        // This function is no longer needed in the new clue-based game
+
+        // Calculate points for a word
+        function calculatePoints(word) {
+            let points = word.length;
+            if (word.length === 7) {
+                points += 10; // Bonus for using all letters
+            }
+            return points;
+        }
+
+        // Show reaction
+        function showReaction() {
+            const reactions = ['🎉', '🎊', '🔥', '💯', '⭐', '🚀', '👏', '💪'];
+            const reaction = reactions[Math.floor(Math.random() * reactions.length)];
+            
+            const reactionEl = document.createElement('div');
+            reactionEl.className = 'reaction';
+            reactionEl.textContent = reaction;
+            document.body.appendChild(reactionEl);
+            
+            setTimeout(() => {
+                document.body.removeChild(reactionEl);
+            }, 300);
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'error' ? '#ff0066' : '#ffaa00'};
+                color: white;
+                padding: 15px 30px;
+                border-radius: 25px;
+                font-size: 1.2rem;
+                z-index: 1000;
+            `;
+            message.textContent = text;
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                document.body.removeChild(message);
+            }, 2000);
+        }
+
+        // Update display
+        function updateDisplay() {
+            // Update clue display
+            const clueDisplay = document.getElementById('clueDisplay');
+            if (currentWordData) {
+                clueDisplay.textContent = currentWordData.clue;
+            }
+            
+            // Create individual letter tiles
+            const lettersContainer = document.getElementById('scrambledLetters');
+            lettersContainer.innerHTML = '';
+            
+            // Scrabble letter point values
+            const letterPoints = {
+                'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3,
+                'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10
+            };
+            
+            for (let letter of gameState.letters) {
+                const tile = document.createElement('div');
+                tile.className = 'letter-tile';
+                tile.textContent = letter.toUpperCase();
+                tile.setAttribute('data-points', letterPoints[letter.toUpperCase()] || 1);
+                lettersContainer.appendChild(tile);
+            }
+            
+            document.getElementById('score').textContent = gameState.score;
+            
+            const wordList = document.getElementById('wordList');
+            wordList.innerHTML = '';
+            gameState.foundWords.forEach(word => {
+                const wordEl = document.createElement('div');
+                wordEl.className = 'word-item';
+                wordEl.textContent = word;
+                wordList.appendChild(wordEl);
+            });
+        }
+
+        // Start timer
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('timer').textContent = gameState.timeLeft;
+                
+                // Add warning class in final 10 seconds
+                if (gameState.timeLeft <= 10) {
+                    document.getElementById('timer').classList.add('warning');
+                    
+                    // Removed voice warnings
+                }
+                
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // End game
+        function endGame() {
+            gameState.gameActive = false;
+            
+            // Add current word to missed words if it was displayed for at least 1 millisecond
+            if (currentWordData && 
+                !gameState.foundWords.includes(currentWordData.word) && 
+                wordDisplayStartTime && 
+                (Date.now() - wordDisplayStartTime) >= 1) {
+                gameState.missedWords.push(currentWordData);
+            }
+            
+            showGameOver();
+        }
+
+        // Check score early (end game)
+        function checkScore() {
+            if (gameState.gameActive) {
+                gameState.gameActive = false;
+                
+                // Add current word to missed words if it was displayed for at least 1 millisecond
+                if (currentWordData && 
+                    !gameState.foundWords.includes(currentWordData.word) && 
+                    wordDisplayStartTime && 
+                    (Date.now() - wordDisplayStartTime) >= 1) {
+                    gameState.missedWords.push(currentWordData);
+                }
+                
+                showGameOver();
+            }
+        }
+
+        // This function is no longer needed in the clue-based game
+
+        // Show game over screen
+        function showGameOver() {
+            // Removed voice announcement
+            
+            const gameOver = document.createElement('div');
+            gameOver.className = 'game-over';
+            
+            // Get found and missed words
+            const foundWords = gameState.foundWords;
+            const missedWords = gameState.missedWords;
+            
+            gameOver.innerHTML = `
+                <h2>GAME OVER!</h2>
+                <div class="final-score">Final Score: ${gameState.score}</div>
+                
+                <div class="word-summary">
+                    <div class="found-words-summary">
+                        <h3>Words Found (${foundWords.length})</h3>
+                        <div class="word-details">
+                            ${foundWords.map(word => `
+                                <div class="word-detail found">
+                                    <span class="word">${word}</span>
+                                    <span class="points">+${calculatePoints(word)}</span>
+                                </div>
+                            `).join('')}
+                            ${foundWords.length === 0 ? '<div class="word-detail"><span class="word">No words found</span></div>' : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="not-found-words-summary">
+                        <h3>Words Missed (${missedWords.length})</h3>
+                        <div class="word-details">
+                            ${missedWords.map(wordData => `
+                                <div class="word-detail missed">
+                                    <span class="word">${wordData.word}</span>
+                                    <span class="clue-hint">💡 ${wordData.clue}</span>
+                                    <span class="points">+${calculatePoints(wordData.word)}</span>
+                                </div>
+                            `).join('')}
+                            ${missedWords.length === 0 ? '<div class="word-detail"><span class="word">No words missed - Perfect!</span></div>' : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="restart-btn" onclick="restartGame()">Play Again</button>
+            `;
+            document.body.appendChild(gameOver);
+        }
+
+        // Restart game
+        function restartGame() {
+            gameState = {
+                letters: '',
+                score: 0,
+                foundWords: [],
+                missedWords: [],
+                timeLeft: 60,
+                gameActive: true
+            };
+            
+            // Reset word display tracking
+            wordDisplayStartTime = null;
+            
+            document.getElementById('timer').classList.remove('warning');
+            document.querySelector('.game-over')?.remove();
+            
+            if (wordsLoaded) {
+                selectNewWord();
+            }
+            initGame();
+        }
+
+        // All voice/TTS features removed
+        
+        // Start the game when page loads
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
